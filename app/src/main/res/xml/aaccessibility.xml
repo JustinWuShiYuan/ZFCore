@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAllMask"
+    android:description="@string/app_describe"
+    android:accessibilityFeedbackType="feedbackSpoken"
+    android:notificationTimeout="100"
+    android:accessibilityFlags="flagReportViewIds"
+    android:canRetrieveWindowContent="true"
+    />
+    <!--    android:accessibilityFlags="flagReportViewIds"
+开启node.getViewIdResourceName()的权限
+        或：info.flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;-->

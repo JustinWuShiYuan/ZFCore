@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:leon="http://schemas.android.com/apk/res-auto"
+    style="@style/actstyle">
+
+    <include layout="@layout/toolbar" />
+
+    <include layout="@layout/index_app_data" />
+
+    <com.zfbu.zfcore.Util.SetPageLayoutItem
+        android:id="@+id/itemroot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        leon:leftIcon="@drawable/ic_root"
+        leon:leftText="Root状态"
+        leon:rightStyle="iconCheck" />
+
+    <com.zfbu.zfcore.Util.SetPageLayoutItem
+        android:id="@+id/itemrest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        leon:leftIcon="@drawable/ic_rest"
+        leon:leftText="30分钟重启支付宝"
+        leon:rightStyle="iconSwitch" />
+
+    <com.zfbu.zfcore.Util.SetPageLayoutItem
+        android:id="@+id/itempro"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        leon:leftIcon="@drawable/ic_pro"
+        leon:leftText="是否启用保护程序"
+        leon:rightStyle="iconSwitch" />
+    <Button
+        android:id="@+id/MD5_Btn"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="点击输入app秘钥"
+        android:textColor="@color/colorPrimary"
+        style="?android:attr/borderlessButtonStyle"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/ac_bike_h3"
+        android:orientation="horizontal">
+
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/qrBtn"
+                style="@style/LongBtn"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/sl_shortbtn"
+                android:text="开启监控"
+                android:textColor="@color/FontBlue" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center">
+            <Button
+                android:id="@+id/startBtn"
+                style="@style/LongBtn"
+                android:background="@drawable/sl_shortbtn"
+                android:text="历史记录"
+                android:textColor="@color/FontBlue" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</LinearLayout>

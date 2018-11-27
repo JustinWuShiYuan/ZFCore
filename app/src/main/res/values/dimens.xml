@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="FontTitle">20sp</dimen>
+    <dimen name="ac_bike_h3">40dp</dimen>
+    <dimen name="margin_x">10dp</dimen>
+</resources>
