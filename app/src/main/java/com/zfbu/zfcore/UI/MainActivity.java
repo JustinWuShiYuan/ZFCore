@@ -413,8 +413,8 @@ public class MainActivity extends Activity {
                         showError("当前支付宝未登录");
                     } else {//成功取到支付宝id
                         hbHandler.sendEmptyMessage(6);//打开服务
-
-
+                        //开始循环抓取
+                        ThreadPoolFactory.getExecutorService().execute(new MyRunnable());
                     }
                 }
             } else {//未有root授权
@@ -623,42 +623,47 @@ public class MainActivity extends Activity {
 
                     break;
                 case 6://打开服务
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {//4.3
-                        if (Config.controlIsOpen) {//如果已经在运行
-                            hbHandler.sendEmptyMessage(7);
-                        } else {//还没运行
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {//大于8.0
-                                /*AServiceMake aServiceMake = new AServiceMake(getContentResolver());
-                                aServiceMake.startSelf(MainActivity.this);
-                                用辅助打开通知栏监控
-                                */
-                                LemonBubble.hide();
-                                showError("因安卓8.0的特殊性,这里需要进行继续优化");
-                            } else {
 
-                                NServiceMake nServiceMake = new NServiceMake(getContentResolver()); //TODO  这里逻辑有待 确认
-                                if(nServiceMake.startSelf(MainActivity.this)){
-                                    hbHandler.sendEmptyMessage(7);
-                                }else{
-                                    LemonHello.getErrorHello("当前系统原因,通知栏权限无法自动打开,请点击确定键后手动开启", String.valueOf(msg.obj))
-                                            .addAction(new LemonHelloAction("确定", new LemonHelloActionDelegate() {
-                                                @Override
-                                                public void onClick(LemonHelloView helloView, LemonHelloInfo helloInfo, LemonHelloAction helloAction) {
-                                                    helloView.hide();
-                                                    gotoNotificationAccessSetting(MainActivity.this);
-                                                }
-                                            }))
-                                            .setEventDelegate(new LemonHelloEventDelegateAdapter() {
-                                                @Override
-                                                public void onMaskTouch(LemonHelloView helloView, LemonHelloInfo helloInfo) {
-                                                    super.onMaskTouch(helloView, helloInfo);
-                                                    helloView.hide();
-                                                }
-                                            })
-                                            .show(MainActivity.this);
-                                }
-                            }
-                        }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {//4.3
+
+                        hbHandler.sendEmptyMessage(7);
+
+                        //判读是否打开获取通知权限
+//                        if (Config.controlIsOpen) {//如果已经在运行
+//                            hbHandler.sendEmptyMessage(7);
+//                        } else {//还没运行
+//                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {//大于8.0
+//                                /*AServiceMake aServiceMake = new AServiceMake(getContentResolver());
+//                                aServiceMake.startSelf(MainActivity.this);
+//                                用辅助打开通知栏监控
+//                                */
+//                                LemonBubble.hide();
+//                                showError("因安卓8.0的特殊性,这里需要进行继续优化");
+//                            } else {
+//
+//                                NServiceMake nServiceMake = new NServiceMake(getContentResolver()); //TODO  这里逻辑有待 确认
+//                                if(nServiceMake.startSelf(MainActivity.this)){
+//                                    hbHandler.sendEmptyMessage(7);
+//                                }else{
+//                                    LemonHello.getErrorHello("当前系统原因,通知栏权限无法自动打开,请点击确定键后手动开启", String.valueOf(msg.obj))
+//                                            .addAction(new LemonHelloAction("确定", new LemonHelloActionDelegate() {
+//                                                @Override
+//                                                public void onClick(LemonHelloView helloView, LemonHelloInfo helloInfo, LemonHelloAction helloAction) {
+//                                                    helloView.hide();
+//                                                    gotoNotificationAccessSetting(MainActivity.this);
+//                                                }
+//                                            }))
+//                                            .setEventDelegate(new LemonHelloEventDelegateAdapter() {
+//                                                @Override
+//                                                public void onMaskTouch(LemonHelloView helloView, LemonHelloInfo helloInfo) {
+//                                                    super.onMaskTouch(helloView, helloInfo);
+//                                                    helloView.hide();
+//                                                }
+//                                            })
+//                                            .show(MainActivity.this);
+//                                }
+//                            }
+//                        }
                     } else {//版本过低
                         LemonBubble.hide();
                         showError("当前设备版本过低");
