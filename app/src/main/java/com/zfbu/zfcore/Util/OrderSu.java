@@ -56,7 +56,7 @@ public class OrderSu {
             dbChangTime = 0;//原数据库文件最后修改的时间
 
             String lastCreate = Core.getPreferences_string(mContext, Config.userName, "lastCreate");
-            if (lastCreate.equals("")) {//如果还没有数据
+            if (StringUtils.isEmpty(lastCreate)) {//如果还没有数据
                 dbOrderCreatTime = "-1";//-1代表初始化 未知的情况.  0代表没有数据库的情况
                 Core.setPreferences_string(mContext, Config.userName, "lastCreate", dbOrderCreatTime);
                 fuckIt(); //初始化读取一次
@@ -80,6 +80,7 @@ public class OrderSu {
             //判断文件是否有变化
             if (dbChangTime != 0 && dbChangTime == file.lastModified()) {//不是第一次 并且  时间一样
                 ZFLog.i("时间一样X1");
+                //TODO 上面已经 取过支付宝的了 这里是？？
                 try {
                     Thread.sleep(1000); //给一秒的读取时间
                 } catch (InterruptedException e) {

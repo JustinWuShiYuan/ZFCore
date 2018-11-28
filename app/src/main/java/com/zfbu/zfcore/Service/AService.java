@@ -3,20 +3,13 @@ package com.zfbu.zfcore.Service;
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
 
 
 import com.zfbu.zfcore.Config.Config;
-import com.zfbu.zfcore.ProData.QrData;
 import com.zfbu.zfcore.ProData.ServiceMsgData;
-import com.zfbu.zfcore.Util.Auxiliary;
 import com.zfbu.zfcore.Util.ZFLog;
-
-import java.io.Serializable;
-import java.util.List;
 
 public class AService extends AccessibilityService {
 
@@ -41,7 +34,7 @@ public class AService extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Config.aserRun = false;
+        Config.helpIsOpen = false;
     }
 
     @Override

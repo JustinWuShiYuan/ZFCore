@@ -21,7 +21,7 @@ public class NCService extends NotificationListenerService {
     @SuppressLint("ObsoleteSdkInt")
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        if (Config.sserRun && Config.runType) {
+        if (Config.serviceIsOpen && Config.isOpenControl) {
 
             Notification n = sbn.getNotification();
             if (n == null) {
@@ -88,13 +88,13 @@ public class NCService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         ZFLog.i("监听服务启动成功");
-        Config.nserRun = true;
+        Config.controlIsOpen = true;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Config.nserRun = false;
+        Config.controlIsOpen = false;
         ZFLog.i("监听服务已关闭");
     }
 

@@ -32,7 +32,7 @@ public class AServiceMake {
     }
 
     public void startSelf(Context context) { //启动自身的辅助插件   getApplicationContext()
-        if (!Config.aserRun) { //如果自己的辅助没有在运行
+        if (!Config.helpIsOpen) { //如果自己的辅助没有在运行
             stop();//先清空(数据库有内容才清空)
             startService(context.getPackageName() + "/" + AService.class.getName());
             alreadyAccessibility = ""; //清空,防止被之后执行start命令

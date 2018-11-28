@@ -35,11 +35,11 @@ import com.zfbu.zfcore.ProData.OrderDataVar;
 import com.zfbu.zfcore.ProData.ServiceMsgData;
 import com.zfbu.zfcore.R;
 import com.zfbu.zfcore.UI.HelloActivity;
-import com.zfbu.zfcore.Util.ConnectServer;
 import com.zfbu.zfcore.Util.Core;
 import com.zfbu.zfcore.Util.OrderSu;
 import com.zfbu.zfcore.Util.UserFunc;
 import com.zfbu.zfcore.Util.ZFLog;
+import com.zfbu.zfcore.threadPool.ThreadPoolFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -71,6 +71,8 @@ public class SService extends Service {
     EncipherInfo encipherInfo = new EncipherInfo();
 
     OrderSu orderSu = null;
+
+    private MyRunnable myRunnable = new MyRunnable();
 
     @Nullable
     @Override
@@ -154,7 +156,8 @@ public class SService extends Service {
         startForeground(1, esNotification);  //设置权限
 
         orderSu = new OrderSu(SService.this);
-        new Thread(new DataLoop()).start();//开始数据
+        ThreadPoolFactory.getExecutorService().execute(new DataLoop());//开始数据
+//        new Thread(new DataLoop()).start();//开始数据
     }
 
     @Override
@@ -166,7 +169,7 @@ public class SService extends Service {
             ZFLog.i("服务的onStartCommand收到的数据: " + hbData.getWhat());
             switch (hbData.getWhat()) {
                 case 1: //启动
-                    Config.sserRun = true;
+                    Config.serviceIsOpen = true;
                     threadSleep = true;
                     break;
                 case 2://关闭
@@ -208,14 +211,14 @@ public class SService extends Service {
                             jsonObject = new JSONObject();
                             try {
 
-                                postInfo.setAccount(Config.zfbNum);
+                                postInfo.setAccount(Config.proceedsZFBNum);
 //                                postInfo.setUuid(JTUtils.getIdentity(getApplicationContext()));
                                 postInfo.setUuid(aa.get(i).getInfo());
                                 postInfo.setAmount(new BigDecimal(aa.get(i).getMoney().replace(".","")));
-                                postInfo.setOrganizationCode(Config.merNum);//需要判断是否是登录,也就是是否有商户信息,如果没有则不post信息
+                                postInfo.setOrganizationCode(Config.businessNum);//需要判断是否是登录,也就是是否有商户信息,如果没有则不post信息
                                 postInfo.setPayType(2);//支付类型:2  支付宝
                                 postInfo.setPayTypeName("WX");
-                                String reqTime=stampToDate(aa.get(i).getGmtCreate().toString());
+                                String reqTime=stampToDate(aa.get(i).getGmtCreate());
                                 postInfo.setRequestTime(reqTime);
 
 
@@ -251,77 +254,11 @@ public class SService extends Service {
                             final String tmpA = aa.get(i).getMoney();
                             final String tmpB = aa.get(i).getGmtCreate().substring(0, 10);
                             ZFLog.i("提交订单: paytime:" + tmpB + "  money:" + tmpA+" 订单号:"+aa.get(i).getOrderId());
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    //演示用
-//                                    ConnectServer connectServer = new ConnectServer();
-//                                    connectServer.submit(tmpB, tmpA);
-                                    Gson gson = new Gson();
-                                    String route = gson.toJson(postInfo);
-                                    PostPayInfoBiz postPayInfoBiz = HttpUtils.retrofit.create(PostPayInfoBiz.class);
-                                    RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), gson.toJson(encipherInfo));
-                                    Call<ResponseInfo> postInfoCall = postPayInfoBiz.getPostPayInfo(body);
-                                    postInfoCall.enqueue(new Callback<ResponseInfo>() {
-                                        @Override
-                                        public void onResponse(Call<ResponseInfo> call, Response<ResponseInfo> response) {
-                                            if (response.body() == null) {
-                                                return;
-                                            }
-                                            if (!JTUtils.isEmpty(response.body().getStatus())) {
-                                                if (JTUtils.isResponseSuccess(response.body().getStatus())) {
-                                                    //成功
-
-                                                } else {
-                                                    //重发
-
-                                                }
-                                            }
-                                        }
-                                        @Override
-                                        public void onFailure(Call<ResponseInfo> call, Throwable t) {
-                                            //请求失败,重发
-
-
-                                        }
-                                    });
-
-
-                                }
-                            }).start();
+                            ThreadPoolFactory.getExecutorService().execute(myRunnable);
                         }
                         ZFLog.i(sss.toString());
                         ZFLog.ToastMsg(SService.this, sss.toString());
                     }
-                    new Thread(new Runnable() {
-                        @SuppressLint("DefaultLocale")
-                        @Override
-                        public void run() {
-                            /*  推送到服务器
-                            ConnectServer connectServer = new ConnectServer();
-                            int i = 0;
-                            String tmpMon = hbData.getStr1();
-                            int a;//  1:status1 成功   2:status0 失败  3.其他错误,可重复推送
-                            do {
-                                i++;
-                                a = connectServer.submit(Config.nowAppId, Core.getTenStamp(Core.getStamp()), tmpMon);
-                                if (a == 1 || a == 2) {
-                                    break;
-                                }
-                                if (i < 3) {
-                                    try {
-                                        Thread.sleep(5000);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            } while (i < 3);//循环三次
-                            UserFunc.setAppData(SService.this, tmpMon, a);
-                            if (a == 3) {
-                                hbHandler.sendEmptyMessage(1000);//推送到服务器失败提示
-                            }*/
-                        }
-                    }).start();
                     break;
                 case 5://有新二维码
                     File path = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera");
@@ -391,7 +328,7 @@ public class SService extends Service {
 
     @Override
     public void onDestroy() {
-        Config.sserRun = false;
+        Config.serviceIsOpen = false;
         threadSleep = false;
         threadRun = false;
         stopForeground(true); //把通知栏关闭
@@ -419,8 +356,7 @@ public class SService extends Service {
                     ZFLog.i("开启跟与保护程序对接");
                     Config.proType = 1; //等待开启
                     Intent serviceIntent = new Intent();
-                    serviceIntent.setComponent(new ComponentName("com.a.alipaytool",
-                            "com.a.alipaytool.Su"));
+                    serviceIntent.setComponent(new ComponentName("com.a.alipaytool", "com.a.alipaytool.Su"));
                     serviceIntent.putExtra("key", "look");
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
                         startForegroundService(serviceIntent);
@@ -432,7 +368,7 @@ public class SService extends Service {
                     if (Objects.equals(msg.getData().getString("key"), "sersuccess")) {
                         ZFLog.i("连接成功");
                         Config.proType = 2;//开启保护
-                        if (!Config.sserRun) { //服务未开
+                        if (!Config.serviceIsOpen) { //服务未开
                             if (Core.getRunCache(SService.this)) { //如果是重启的
                                 Core.ESOpenApp(getPackageName(), SService.this);//启动
                             }
@@ -484,7 +420,7 @@ public class SService extends Service {
                 }
 
                 if (threadSleep) {
-                    if (Config.sserRun && (Config.aserRun || Config.nserRun) && Config.runType && Config.restState) {//运行中
+                    if (Config.serviceIsOpen && (Config.helpIsOpen || Config.controlIsOpen) && Config.isOpenControl && Config.restState) {//运行中
                         String tmpStr = Core.getPreferences_string(SService.this, Config.userName, "killtime");
                         if (!tmpStr.equals("")) {
                             //现在时间-启动时间>30分钟
@@ -509,4 +445,62 @@ public class SService extends Service {
         res = simpleDateFormat.format(date);
         return res;
     }
+
+
+   private class MyRunnable implements  Runnable{
+        private volatile long  retryCount = 0;
+
+       @Override
+       public void run() {
+           //演示用
+//         ConnectServer connectServer = new ConnectServer();
+//         connectServer.submit(tmpB, tmpA);
+           requestNet();
+       }
+
+       private void requestNet() {
+           Gson gson = new Gson();
+//           String route = gson.toJson(postInfo);
+           PostPayInfoBiz postPayInfoBiz = HttpUtils.retrofit.create(PostPayInfoBiz.class);
+           RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), gson.toJson(encipherInfo));
+           Call<ResponseInfo> postInfoCall = postPayInfoBiz.getPostPayInfo(body);
+           postInfoCall.enqueue(new Callback<ResponseInfo>() {
+               @Override
+               public void onResponse(Call<ResponseInfo> call, Response<ResponseInfo> response) {
+                   if (response.body() == null) {
+                       return;
+                   }
+                   if (!JTUtils.isEmpty(response.body().getStatus())) {
+                       if (JTUtils.isResponseSuccess(response.body().getStatus())) {
+                           //成功
+                       } else {
+                           //重发
+                           synchronized (this){
+                               if(retryCount > 1000){
+                                   retryCount = 0;
+                               }
+                               retryCount ++;
+                               if(retryCount % 5 != 0){
+                                   requestNet();
+                               }
+                           }
+                       }
+                   }
+               }
+               @Override
+               public void onFailure(Call<ResponseInfo> call, Throwable t) {
+                   synchronized (this){
+                       if(retryCount > 1000){
+                           retryCount = 0;
+                       }
+                       retryCount ++;
+                       if(retryCount % 5 != 0){
+                           requestNet();
+                       }
+                   }
+               }
+           });
+
+       }
+   }
 }

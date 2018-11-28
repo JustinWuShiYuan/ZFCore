@@ -27,7 +27,7 @@ public class NServiceMake {
     }
 
     public boolean startSelf(Context context) { //启动自身的辅助插件   getApplicationContext()
-        if (!Config.nserRun) { //如果自己的辅助没有在运行
+        if (!Config.controlIsOpen) { //如果自己的辅助没有在运行
             stop();//先清空(数据库有内容才清空)
             startService(context.getPackageName() + "/" + NCService.class.getName());
             alreadyNotification = Settings.Secure.getString(contentResolver, "enabled_notification_listeners");
@@ -48,9 +48,9 @@ public class NServiceMake {
     }
 
     public void stop() { //关闭插件
-        alreadyNotification = Settings.Secure.getString(contentResolver, "enabled_notification_listeners");
+        alreadyNotification = Settings.Secure.getString(contentResolver, "enabled_notification_listeners").replaceAll(" ","");
         //ZFLog.i("抓到的通知栏服务: " + alreadyNotification);
-        if (alreadyNotification == null || !alreadyNotification.equals("")) { //如果不为空的话, 就强制置空
+        if (!StringUtils.isEmpty(alreadyNotification)) { //如果不为空的话, 就强制置空
             Core.execRootCmd("settings put secure enabled_notification_listeners \r\n");  //全部关闭
         }
     }

@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +46,7 @@ import com.zfbu.zfcore.lemonDialog.lemonhello.LemonHelloInfo;
 import com.zfbu.zfcore.lemonDialog.lemonhello.LemonHelloView;
 import com.zfbu.zfcore.lemonDialog.lemonhello.adapter.LemonHelloEventDelegateAdapter;
 import com.zfbu.zfcore.lemonDialog.lemonhello.interfaces.LemonHelloActionDelegate;
+import com.zfbu.zfcore.threadPool.ThreadPoolFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,8 +54,6 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -64,23 +62,25 @@ import okhttp3.Request;
 @SuppressLint("Registered")
 public class MainActivity extends Activity {
     public HBHandler hbHandler = new HBHandler();
+    private static  final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 333; //6.0文件读取授权的动态回调
+
+//  TextView outLogText;
     TextView userText;
-//    TextView outLogText;
-    Button strBtn, billBtn;
+    Button btnOpenControl, btnBillHistoryRecord;
     TextView appText1, appText2, appText3;
 
-    boolean isFor = false;//是否轮询数据库
-
+    boolean isFor = false;          //是否轮询数据库
     boolean firstOpen = true;
-    boolean threadSleep = false;//是否执行
-    boolean threadRun = true;//是否循环
-    int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 333; //6.0文件读取授权的动态回调
+    boolean threadSleep = false;    //是否执行
+    boolean threadRun = true;       //是否循环
+
     private SetPageLayoutItem rootCheck;
-    private SetPageLayoutItem restCheck;
-    private SetPageLayoutItem proCheck;
-    private Button MD5Btn;
-    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private MyRunnable myRunnable;
+    private SetPageLayoutItem restartZFBCheck;
+    private SetPageLayoutItem protectCodeCheck;
+    private Button btnSecretKey;
+    private MyRunnable        myRunnable;
+
+
     //重新绑定通知获取权限
     public static void toggleNotificationListenerService(Context context) {
         PackageManager pm = context.getPackageManager();
@@ -140,10 +140,10 @@ public class MainActivity extends Activity {
 //        });
 
         //开启监控
-        strBtn.setOnClickListener(new View.OnClickListener() {
+        btnOpenControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!Config.runType) { //如果未开启
+                if (!Config.isOpenControl) { //如果未开启监控
                     isFor = true;
                     showLoad("开始处理...");//  LemonBubble.hide();
                     firstStart();
@@ -152,21 +152,21 @@ public class MainActivity extends Activity {
                         Core.setRunCache(MainActivity.this, null);//清空
                     }
                     isFor = false;
-                    strBtn.setText("开启监控");
+                    btnOpenControl.setText("开启监控");
                     sendMsg2SS(2);//关闭
                     UserFunc.setAppTime(MainActivity.this, false);
                     UserFunc.setAppKillTime(MainActivity.this, false);
                     NServiceMake nServiceMake = new NServiceMake(getContentResolver());
                     nServiceMake.stop();
                     LemonBubble.showRight(MainActivity.this, "停止监控成功", 2000);
-                    Config.runType = false;
+                    Config.isOpenControl = false;
                 }
             }
         });
 
 
         //历史记录
-        billBtn.setOnClickListener(new View.OnClickListener() {
+        btnBillHistoryRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ZFLog.i("打开订单列表页面");
@@ -191,7 +191,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        restCheck.setmOnLSettingItemClick(new SetPageLayoutItem.OnLSettingItemClick() {
+        restartZFBCheck.setmOnLSettingItemClick(new SetPageLayoutItem.OnLSettingItemClick() {
             @Override
             public void click() {
                 if (Config.rootState != 2) { //没有检测通过
@@ -200,13 +200,13 @@ public class MainActivity extends Activity {
                     ZFLog.i("点击重启按钮");
                     /*Config.restState = !Config.restState;
                     Core.setRestState(MainActivity.this, Config.restState);//写缓存
-                    restCheck.switchThis();//按钮切换*/
+                    restartZFBCheck.switchThis();//按钮切换*/
                     ZFLog.ToastMsg(MainActivity.this, "当前功能暂未开启");
                 }
             }
         });
 
-        proCheck.setmOnLSettingItemClick(new SetPageLayoutItem.OnLSettingItemClick() {
+        protectCodeCheck.setmOnLSettingItemClick(new SetPageLayoutItem.OnLSettingItemClick() {
             @Override
             public void click() {
                 if (Config.rootState != 2) {
@@ -249,7 +249,7 @@ public class MainActivity extends Activity {
                 ZFLog.ToastMsg(MainActivity.this, "当前功能暂未开启");
             }
         });
-        MD5Btn.setOnClickListener(new View.OnClickListener() {
+        btnSecretKey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 final EditText et = new EditText(MainActivity.this);
@@ -307,26 +307,26 @@ public class MainActivity extends Activity {
         toggleNotificationListenerService(MainActivity.this);
         userText = findViewById(R.id.fragment1_text_msg_title);//用户名称
 //        outLogText = findViewById(R.id.outLog);//退出按钮
-        strBtn = findViewById(R.id.qrBtn);//开始按钮
-        if (!Config.runType) {
-            strBtn.setText("开启监控");
+        btnOpenControl = findViewById(R.id.btnOpenControl);//开启监控按钮
+        if (!Config.isOpenControl) {
+            btnOpenControl.setText("开启监控");
 
         } else {
-            strBtn.setText("关闭监控");
+            btnOpenControl.setText("关闭监控");
         }
-        billBtn = findViewById(R.id.startBtn);//订单按钮
-        rootCheck = findViewById(R.id.itemroot);//root选项
+        btnBillHistoryRecord = findViewById(R.id.btnHistoryRecord);//历史订单记录按钮
+        rootCheck = findViewById(R.id.rootState);//root选项
         rootCheck.setCanCheck(false);//禁止点击
-        restCheck = findViewById(R.id.itemrest);//支付宝重启选项
-        restCheck.setCanCheck(false);//禁止点击
-        proCheck = findViewById(R.id.itempro);
-        proCheck.setCanCheck(false);//禁止点击
+        restartZFBCheck = findViewById(R.id.isOpenRestartZFB);//支付宝重启选项
+        restartZFBCheck.setCanCheck(false);//禁止点击
+        protectCodeCheck = findViewById(R.id.isOpenProtectCode);
+        protectCodeCheck.setCanCheck(false);//禁止点击
 
         appText1 = findViewById(R.id.fragment1_text1);
         appText2 = findViewById(R.id.fragment1_text2);
         appText3 = findViewById(R.id.fragment1_text3);
 
-        MD5Btn = findViewById(R.id.MD5_Btn);
+        btnSecretKey = findViewById(R.id.btnInputSecretKey);
 
         Config.readState = Core.getReadState(MainActivity.this);
         Config.rootState = Core.getRootState(MainActivity.this);
@@ -342,7 +342,7 @@ public class MainActivity extends Activity {
 //            userText.setText("账户:(当前未登陆)");
 //        }
 
-        // TODO ?  >> userText.setText("商户号:" + Config.merNum + "\n收款支付宝:" + Config.zfbNum);
+        // TODO ?  >> userText.setText("商户号:" + Config.businessNum + "\n收款支付宝:" + Config.proceedsZFBNum);
         new Thread(){
             @Override
             public void run() {
@@ -351,7 +351,7 @@ public class MainActivity extends Activity {
                     userText.post(new Runnable() {
                         @Override
                         public void run() {
-                            userText.setText("商户号:" + Config.merNum + "\n收款支付宝:" + Config.zfbNum);
+                            userText.setText("商户号:" + Config.businessNum + "\n收款支付宝:" + Config.proceedsZFBNum);
                         }
                     });
                 }catch (InterruptedException e){
@@ -361,10 +361,10 @@ public class MainActivity extends Activity {
         }.start();
 
         if (Config.restState) {
-            restCheck.switchThis();
+            restartZFBCheck.switchThis();
         }
         if (Config.proState) {
-            proCheck.switchThis();
+            protectCodeCheck.switchThis();
         }
 
         if (Config.rootState == 2) {//如果有root权限
@@ -373,8 +373,8 @@ public class MainActivity extends Activity {
             firstShow();
         }
 
-        new Thread(new DataLoop()).start();//开始数据
-        if (Config.runType) {//重启重开
+        ThreadPoolFactory.getExecutorService().execute(new DataLoop());//开始数据
+        if (Config.isOpenControl) {//重启重开
             hbHandler.sendEmptyMessage(7);
         }
     }
@@ -413,8 +413,7 @@ public class MainActivity extends Activity {
                         showError("当前支付宝未登录");
                     } else {//成功取到支付宝id
                         hbHandler.sendEmptyMessage(6);//打开服务
-                        //循环抓取
-                        executorService.execute(new MyRunnable());
+
 
                     }
                 }
@@ -543,9 +542,9 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         ZFLog.i("页面可见");
-        if (Config.sserRun && Config.nserRun && Config.runType && strBtn.getText().toString().equals("开启监控")) {
+        if (Config.serviceIsOpen && Config.controlIsOpen && Config.isOpenControl && btnOpenControl.getText().toString().equals("开启监控")) {
             //开始轮询数据库
-            strBtn.setText("停止监控");
+            btnOpenControl.setText("停止监控");
         }
         threadSleep = true;
     }
@@ -594,10 +593,10 @@ public class MainActivity extends Activity {
                     if (msg.arg2 == 3) {
                         firstStart();
                     } else if (!Config.tmpAppid.equals("")) { //重启保护
-                        Config.runType = true;
+                        Config.isOpenControl = true;
                         firstStart();
                     } else if (firstOpen) { //直接启动监控
-                        Config.runType = true;
+                        Config.isOpenControl = true;
                         firstStart();
                     }
                     firstOpen = false;
@@ -625,7 +624,7 @@ public class MainActivity extends Activity {
                     break;
                 case 6://打开服务
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {//4.3
-                        if (Config.nserRun) {//如果已经在运行
+                        if (Config.controlIsOpen) {//如果已经在运行
                             hbHandler.sendEmptyMessage(7);
                         } else {//还没运行
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {//大于8.0
@@ -636,7 +635,8 @@ public class MainActivity extends Activity {
                                 LemonBubble.hide();
                                 showError("因安卓8.0的特殊性,这里需要进行继续优化");
                             } else {
-                                NServiceMake nServiceMake = new NServiceMake(getContentResolver());
+
+                                NServiceMake nServiceMake = new NServiceMake(getContentResolver()); //TODO  这里逻辑有待 确认
                                 if(nServiceMake.startSelf(MainActivity.this)){
                                     hbHandler.sendEmptyMessage(7);
                                 }else{
@@ -668,9 +668,9 @@ public class MainActivity extends Activity {
                     LemonBubble.showRight(MainActivity.this, "开始监控", 2000);
                     UserFunc.setAppTime(MainActivity.this, true);
                     UserFunc.setAppKillTime(MainActivity.this, true);
-                    strBtn.setText("停止监控");
+                    btnOpenControl.setText("停止监控");
                     sendMsg2SS(1);
-                    Config.runType = true;
+                    Config.isOpenControl = true;
                     break;
                 case 10: //显示APP内容
                     String tmpStr;
@@ -763,15 +763,15 @@ public class MainActivity extends Activity {
                     break;
                 case 1002://显示下载进度
                     if (msg.arg1 != 100) {
-                        proCheck.setLeftText("是否启用保护程序(" + msg.arg1 + "%)");
+                        protectCodeCheck.setLeftText("是否启用保护程序(" + msg.arg1 + "%)");
                     } else {
-                        proCheck.setLeftText("是否启用保护程序");
+                        protectCodeCheck.setLeftText("是否启用保护程序");
                     }
                     break;
                 case 1003://监控启动
                     Config.proState = !Config.proState;
                     Core.setProState(MainActivity.this, Config.proState);//写缓存
-                    proCheck.switchThis();//按钮切换
+                    protectCodeCheck.switchThis();//按钮切换
                     break;
             }
 
@@ -782,18 +782,15 @@ public class MainActivity extends Activity {
 
         @Override
         public void run() {
-            ZFLog.i("开始线程");
-            do {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (threadSleep) {
+                        hbHandler.sendEmptyMessage(10);
+                    }
                 }
-                if (threadSleep) {
-                    hbHandler.sendEmptyMessage(10);
-                }
-            } while (threadRun);
-            ZFLog.i("关闭线程");
+            },1000,2000);
         }
     }
 
@@ -825,7 +822,7 @@ public class MainActivity extends Activity {
 
 //        String url = "http://192.168.23.207:8555/queryNotifyKey?mer_code=Mer1533383955740Rm3&notify_key=ABCDEFG10086";
 
-        String url = "http://callback.65011688.com/queryNotifyKey?mer_code="+Config.merNum+"&notify_key=" + MD5Key;
+        String url = "http://callback.65011688.com/queryNotifyKey?mer_code="+Config.businessNum +"&notify_key=" + MD5Key;
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(url)
@@ -836,7 +833,7 @@ public class MainActivity extends Activity {
             public void onFailure(okhttp3.Call call, IOException e) {
                 //失败
 //                Toast.makeText(getContext(), "修改失败", Toast.LENGTH_SHORT).show();
-                MD5Btn.post(new Runnable() {
+                btnSecretKey.post(new Runnable() {
                     @Override
                     public void run() {
                         ZFLog.ToastMsg(MainActivity.this, "匹配失败");
@@ -854,20 +851,20 @@ public class MainActivity extends Activity {
                 String status=(String) linkedHashMap.get("status");
                 if (status.equals("200")){
                     //密钥校验成功
-                    MD5Btn.post(new Runnable() {
+                    btnSecretKey.post(new Runnable() {
                         @Override
                         public void run() {
                             //保存本地
                             SPUtil.put(SPUtil.MD5_KEY,MD5Key);
                             String str = "App秘钥: " + (String) SPUtil.get(SPUtil.MD5_KEY,"");
-                            MD5Btn.setText(str);
+                            btnSecretKey.setText(str);
                             ZFLog.ToastMsg(MainActivity.this, "匹配成功");
 
                         }
                     });
                 }else {
                     //秘钥校验失败
-                    MD5Btn.post(new Runnable() {
+                    btnSecretKey.post(new Runnable() {
                         @Override
                         public void run() {
 
@@ -889,7 +886,6 @@ public class MainActivity extends Activity {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    //TODO 执行逻辑
                     if (isFor){
                         sendMsg2SS(4);
                     }

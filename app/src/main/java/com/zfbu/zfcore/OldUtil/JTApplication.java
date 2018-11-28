@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 
+import com.zfbu.zfcore.threadPool.ThreadPoolFactory;
+
 
 //import com.xdandroid.hellodaemon.DaemonEnv;
 
@@ -21,6 +23,7 @@ public class JTApplication extends Application {
 //        DaemonEnv.initialize(this, LiveService.class, DaemonEnv.DEFAULT_WAKE_UP_INTERVAL);
 //        LiveService.sShouldStopService = false;
 //        DaemonEnv.startServiceMayBind(LiveService.class);
+        ThreadPoolFactory.getExecutorService();//初始化线程池
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override
@@ -58,5 +61,6 @@ public class JTApplication extends Application {
 
             }
         });
+
     }
 }

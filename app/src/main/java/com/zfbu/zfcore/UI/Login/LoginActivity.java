@@ -178,9 +178,9 @@ public class LoginActivity extends Activity {
                 if (!JTUtils.isEmpty(response.body().getStatus()) && !JTUtils.isEmpty(remoteSign)) {
                     if (JTUtils.isResponseSuccess(response.body().getStatus()) && remoteSign.equals(localSign)) {
                         //收款支付宝
-                        Config.zfbNum = ZFBTest;
+                        Config.proceedsZFBNum = ZFBTest;
                         //商户号
-                        Config.merNum = loginResponseData.getOrgCode();
+                        Config.businessNum = loginResponseData.getOrgCode();
 
                         //登录成功后将相应数据保存至本地
                         SPUtil.put(SPUtil.ORG_CODE, loginResponseData.getOrgCode());

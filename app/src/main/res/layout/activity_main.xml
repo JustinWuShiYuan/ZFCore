@@ -8,7 +8,7 @@
     <include layout="@layout/index_app_data" />
 
     <com.zfbu.zfcore.Util.SetPageLayoutItem
-        android:id="@+id/itemroot"
+        android:id="@+id/rootState"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
@@ -17,7 +17,7 @@
         leon:rightStyle="iconCheck" />
 
     <com.zfbu.zfcore.Util.SetPageLayoutItem
-        android:id="@+id/itemrest"
+        android:id="@+id/isOpenRestartZFB"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
@@ -26,7 +26,7 @@
         leon:rightStyle="iconSwitch" />
 
     <com.zfbu.zfcore.Util.SetPageLayoutItem
-        android:id="@+id/itempro"
+        android:id="@+id/isOpenProtectCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
@@ -34,7 +34,7 @@
         leon:leftText="是否启用保护程序"
         leon:rightStyle="iconSwitch" />
     <Button
-        android:id="@+id/MD5_Btn"
+        android:id="@+id/btnInputSecretKey"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:gravity="center"
@@ -56,7 +56,7 @@
             android:gravity="center">
 
             <Button
-                android:id="@+id/qrBtn"
+                android:id="@+id/btnOpenControl"
                 style="@style/LongBtn"
                 android:layout_marginBottom="5dp"
                 android:background="@drawable/sl_shortbtn"
@@ -71,7 +71,7 @@
             android:layout_weight="1"
             android:gravity="center">
             <Button
-                android:id="@+id/startBtn"
+                android:id="@+id/btnHistoryRecord"
                 style="@style/LongBtn"
                 android:background="@drawable/sl_shortbtn"
                 android:text="历史记录"
